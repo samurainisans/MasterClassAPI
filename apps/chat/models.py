@@ -21,11 +21,11 @@ class ChatMessage(models.Model):
         return f"{self.sender} - {self.reciever}"
 
     @property
-    def sender_profile(self):
+    def get_sender_profile(self):
         sender_profile = Profile.objects.get(user=self.sender)
         return sender_profile
 
     @property
-    def reciever_profile(self):
+    def get_reciever_profile(self):
         reciever_profile = Profile.objects.get(user=self.reciever)
         return reciever_profile

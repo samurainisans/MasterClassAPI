@@ -10,8 +10,9 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    def profile(self):
+    def get_profile(self):
         profile = Profile.objects.get(user=self)
+
 
 
 class Profile(models.Model):

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.chat.apps.ChatConfig',
     'apps.masterclasses.apps.MasterclassesConfig',
     'apps.users.apps.UsersConfig',
+    'apps.gis.apps.GisConfig',
     'rest_framework',
 ]
 
@@ -70,9 +71,18 @@ WSGI_APPLICATION = 'MasterClassAPI.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
+
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'MasterClasses',  # Имя вашей базы данных
+        'USER': 'postgres',  # Ваше имя пользователя PostgreSQL
+        'PASSWORD': '3225',  # Ваш пароль PostgreSQL
+        'HOST': 'localhost',  # Адрес сервера базы данных, если локально, то 'localhost'
+        'PORT': '5432',  # Порт PostgreSQL, стандартный порт 5432
     }
 }
 

@@ -5,6 +5,7 @@ from apps.chat.serializer import MessageSerializer
 from apps.users.models import User
 from rest_framework import viewsets, mixins, status
 
+
 class MyInbox(generics.ListAPIView):
     serializer_class = MessageSerializer
 
@@ -43,4 +44,3 @@ class GetMessages(generics.ListAPIView):
 
 class SendMessagesViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     serializer_class = MessageSerializer
-
