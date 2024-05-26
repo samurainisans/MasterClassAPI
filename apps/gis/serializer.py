@@ -3,6 +3,7 @@
 from rest_framework import serializers
 from .models import GISMasterClass
 
+
 class GISMasterClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = GISMasterClass

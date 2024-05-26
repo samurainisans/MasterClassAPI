@@ -10,4 +10,5 @@ urlpatterns = [
     path('chat/', include('apps.chat.urls')),
     path('masterclasses/', include('apps.masterclasses.urls')),
     path('gis/', include('apps.gis.urls')),
+    path('users/', include('apps.users.urls')),
 ]
