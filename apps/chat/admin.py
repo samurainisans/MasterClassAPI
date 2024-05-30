@@ -1,22 +1,12 @@
 from django.contrib import admin
-from .models import ChatMessage
-from ..users.models import User, Profile
+from .models import Chat, Message
 
+@admin.register(Chat)
+class ChatAdmin(admin.ModelAdmin):
+    list_display = ('name', 'chat_status')
+    search_fields = ('name',)
 
-class ChatMessageAdmin(admin.ModelAdmin):
-    list_editable = ['is_read', 'message']
-    list_display = ['user', 'sender', 'reciever', 'is_read', 'message']
-
-
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email']
-
-
-class ProfileAdmin(admin.ModelAdmin):
-    list_editable = ['verified']
-    list_display = ['user', 'full_name', 'verified']
-
-
-admin.site.register(User, UserAdmin)
-admin.site.register(Profile, ProfileAdmin)
-admin.site.register(ChatMessage, ChatMessageAdmin)
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('chat', 'user', 'type_msg', 'type_location', 'type_ack', 'content', 'time')
+    search_fields = ('chat__name', 'user__username', 'type_msg', 'type_location', 'type_ack', 'content')

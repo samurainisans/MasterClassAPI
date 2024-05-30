@@ -1,57 +1,34 @@
-# users/models.py
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models.signals import post_save
-
 
 class Role(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
 
-
 class User(AbstractUser):
-    username = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
-    roles = models.ManyToManyField(Role, through='UserRole')
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    def get_profile(self):
-        profile = Profile.objects.get(user=self)
-
-
-class UserRole(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('user', 'role')
-
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=1000)
-    bio = models.TextField()
-    image = models.ImageField(upload_to="user_images", default="default.jpg")
+    role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True)
+    bio = models.TextField(blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), null=True, blank=True)
+    image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     verified = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs):
-        if self.full_name == "" or self.full_name == None:
-            self.full_name = self.user.username
-        super(Profile, self).save(*args, **kwargs)
+    def __str__(self):
+        return self.username
 
+class Contact(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='contact')
+    phone_number = models.CharField(max_length=15, null=True, blank=True)
+    telegram = models.CharField(max_length=100, null=True, blank=True)
+    whatsapp = models.CharField(max_length=100, null=True, blank=True)
+    viber = models.CharField(max_length=100, null=True, blank=True)
+    vk = models.CharField(max_length=100, null=True, blank=True)
+    ok = models.CharField(max_length=100, null=True, blank=True)
 
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
-post_save.connect(create_user_profile, sender=User)
-post_save.connect(save_user_profile, sender=User)
+    def __str__(self):
+        return self.user.username

@@ -101,9 +101,9 @@ SIMPLE_JWT = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'MasterClasses',  # Имя вашей базы данных
+        'NAME': 'MasterClass',  # Имя вашей базы данных
         'USER': 'postgres',  # Ваше имя пользователя PostgreSQL
-        'PASSWORD': '3225',  # Ваш пароль PostgreSQL
+        'PASSWORD': 'ZGSnrAF09',  # Ваш пароль PostgreSQL
         'HOST': 'localhost',  # Адрес сервера базы данных, если локально, то 'localhost'
         'PORT': '5432',  # Порт PostgreSQL, стандартный порт 5432
     }

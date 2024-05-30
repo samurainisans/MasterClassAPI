@@ -1,12 +1,11 @@
-# chat/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-from apps.chat import views
+from .views import ChatViewSet, MessageViewSet
 
 router = DefaultRouter()
-router.register(r'send-messages', views.SendMessagesViewSet, basename='my-messages')
+router.register(r'chats', ChatViewSet)
+router.register(r'messages', MessageViewSet)
+
 urlpatterns = [
-    path('get-messages/<sender_id>/<reciever_id>/', views.GetMessages.as_view()),
     path('', include(router.urls)),
 ]

@@ -1,6 +1,6 @@
 # gis/models.py
 from django.db import models
-from apps.masterclasses.models import MasterClass, Participant
+from ..masterclasses.models import MasterClass, Participant
 
 
 class GISMasterClass(MasterClass):

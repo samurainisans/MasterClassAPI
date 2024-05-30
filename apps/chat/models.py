@@ -1,31 +1,15 @@
 from django.db import models
+from ..users.models import User
 
-from apps.users.models import Profile, User
+class Chat(models.Model):
+    name = models.CharField(max_length=255)
+    chat_status = models.IntegerField()
 
-
-class ChatMessage(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="user")
-    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="sender")
-    reciever = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="reciever")
-
-    message = models.CharField(max_length=10000)
-
-    is_read = models.BooleanField(default=False)
-    date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['date']
-        verbose_name_plural = "Message"
-
-    def __str__(self):
-        return f"{self.sender} - {self.reciever}"
-
-    @property
-    def get_sender_profile(self):
-        sender_profile = Profile.objects.get(user=self.sender)
-        return sender_profile
-
-    @property
-    def get_reciever_profile(self):
-        reciever_profile = Profile.objects.get(user=self.reciever)
-        return reciever_profile
+class Message(models.Model):
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    type_msg = models.CharField(max_length=50)
+    type_location = models.CharField(max_length=50)
+    type_ack = models.CharField(max_length=50)
+    content = models.TextField()
+    time = models.DateTimeField(auto_now_add=True)

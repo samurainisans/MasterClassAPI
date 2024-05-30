@@ -1,31 +1,19 @@
-# views.py
 from rest_framework import viewsets
-from .models import Category, MasterClass, Participant, Speaker, Organizer
-from .serializer import CategorySerializer, ParticipantSerializer, MasterClassSerializer, SpeakerSerializer, \
-    OrganizerSerializer
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
+from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass
+from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, FavoriteMasterClassSerializer
 
 class MasterClassViewSet(viewsets.ModelViewSet):
     queryset = MasterClass.objects.all()
     serializer_class = MasterClassSerializer
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
-class ParticipantViewSet(viewsets.ModelViewSet):
-    queryset = Participant.objects.all()
-    serializer_class = ParticipantSerializer
+class UserMasterClassViewSet(viewsets.ModelViewSet):
+    queryset = UserMasterClass.objects.all()
+    serializer_class = UserMasterClassSerializer
 
-
-class SpeakerViewSet(viewsets.ModelViewSet):
-    queryset = Speaker.objects.all()
-    serializer_class = SpeakerSerializer
-
-
-class OrganizerViewSet(viewsets.ModelViewSet):
-    queryset = Organizer.objects.all()
-    serializer_class = OrganizerSerializer
-
-
+class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
+    queryset = FavoriteMasterClass.objects.all()
+    serializer_class = FavoriteMasterClassSerializer
