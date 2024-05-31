@@ -8,6 +8,7 @@ router.register(r'categories', CategoryViewSet)
 router.register(r'usermasterclasses', UserMasterClassViewSet)
 router.register(r'favoritemasterclasses', FavoriteMasterClassViewSet)
 
+
 urlpatterns = [
     path('', include(router.urls)),
 ]
