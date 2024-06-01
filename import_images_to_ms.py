@@ -10,7 +10,7 @@ django.setup()
 from apps.masterclasses.models import MasterClass
 
 # Конфигурация статической ссылки Unsplash
-UNSPLASH_URL = 'https://source.unsplash.com/random/400x200'
+UNSPLASH_URL = 'https://source.unsplash.com/random/400x300'
 
 def get_image_url():
     response = requests.get(UNSPLASH_URL)
@@ -30,7 +30,7 @@ def update_masterclass(masterclass):
 masterclasses = MasterClass.objects.all()
 
 # Создание пула потоков для параллельного выполнения
-with ThreadPoolExecutor(max_workers=10) as executor:
+with ThreadPoolExecutor(max_workers=50) as executor:
     futures = [executor.submit(update_masterclass, mc) for mc in masterclasses]
 
     for future in as_completed(futures):

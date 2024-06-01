@@ -1,3 +1,4 @@
+# C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/serializer.py
 from rest_framework import serializers
 from .models import User, Role, Contact
 
