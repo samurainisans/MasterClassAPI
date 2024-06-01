@@ -46,3 +46,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = ['user', 'registered_at']
+
+
+class CitySerializer(serializers.Serializer):
+    locality = serializers.CharField(max_length=255)

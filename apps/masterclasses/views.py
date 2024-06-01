@@ -2,7 +2,7 @@
 from rest_framework import viewsets, generics
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
-    FavoriteMasterClassSerializer, ParticipantSerializer
+    FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer
 
 
 class MasterClassViewSet(viewsets.ModelViewSet):
@@ -46,3 +46,10 @@ class MasterClassParticipantsView(generics.ListAPIView):
     def get_queryset(self):
         masterclass_id = self.kwargs['masterclass_id']
         return UserMasterClass.objects.filter(master_class_id=masterclass_id)
+
+
+class CitiesListView(generics.ListAPIView):
+    serializer_class = CitySerializer
+
+    def get_queryset(self):
+        return [{'locality': locality} for locality in MasterClass.objects.values_list('locality', flat=True).distinct()]
