@@ -1,9 +1,14 @@
+# C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/masterclasses/views.py
+
 from rest_framework import viewsets
+
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass
-from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, FavoriteMasterClassSerializer
+from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
+    FavoriteMasterClassSerializer
+
 
 class MasterClassViewSet(viewsets.ModelViewSet):
-    queryset = MasterClass.objects.all()
+    queryset = MasterClass.objects.select_related('organizer', 'speaker').prefetch_related('categories')
     serializer_class = MasterClassSerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):

@@ -3,12 +3,15 @@ from django.db import models
 from ..users.models import User
 
 
+# masterclasses/models.py
+from django.db import models
+from ..users.models import User
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
-
 
 class MasterClass(models.Model):
     title = models.CharField(max_length=255)
@@ -20,7 +23,7 @@ class MasterClass(models.Model):
     categories = models.ManyToManyField(Category, related_name='masterclasses')
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    image = models.ImageField(upload_to='masterclass_images/', null=True, blank=True)
+    image_url = models.CharField(max_length=500, null=True, blank=True)
     organizer = models.ForeignKey(User, related_name='organized_masterclasses', on_delete=models.CASCADE)
     speaker = models.ForeignKey(User, related_name='speaking_masterclasses', on_delete=models.CASCADE)
     location_name = models.CharField(max_length=255)
@@ -52,6 +55,7 @@ class Participant(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.masterclass}'
+
 
 #
 # {
