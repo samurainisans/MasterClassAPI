@@ -10,15 +10,17 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
 
 class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
+
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = FavoriteMasterClass.objects.all()
     serializer_class = FavoriteMasterClassSerializer
-
