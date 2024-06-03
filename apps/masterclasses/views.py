@@ -69,8 +69,11 @@ class MasterClassFilter(django_filters.FilterSet):
         model = MasterClass
         fields = ['categories', 'locality', 'start_date', 'end_date']
 
+
 class MasterClassViewSet(viewsets.ModelViewSet):
     queryset = MasterClass.objects.select_related('organizer', 'speaker').prefetch_related('categories')
     serializer_class = MasterClassSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = MasterClassFilter
+    search_fields = ['title']
+
