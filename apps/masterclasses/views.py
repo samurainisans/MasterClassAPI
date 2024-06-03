@@ -3,7 +3,7 @@ import django_filters
 from rest_framework import viewsets, generics
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
-    FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer
+    FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer, MasterClassCreateSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 
@@ -76,4 +76,9 @@ class MasterClassViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = MasterClassFilter
     search_fields = ['title']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return MasterClassCreateSerializer
+        return MasterClassSerializer
 
