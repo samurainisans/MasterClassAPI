@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p>Привет, {{ user.email }},</p>
+    <p>Пожалуйста перейдите по ссылке для подтверждения своей учетной записи:</p>
+    <p><a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">Подтвердить аккаунт</a></p>
+</body>
+</html>
