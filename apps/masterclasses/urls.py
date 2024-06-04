@@ -5,7 +5,7 @@ from .views import MasterClassViewSet, CategoryListView, MasterClassParticipants
     CitiesListView
 
 router = DefaultRouter()
-router.register(r'', MasterClassViewSet, basename='masterclass')
+router.register(r'api/masterclasses', MasterClassViewSet, basename='masterclass')
 
 urlpatterns = [
     path('cities/', CitiesListView.as_view()),
