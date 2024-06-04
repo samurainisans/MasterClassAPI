@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import User, Role, Contact
 
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -20,6 +21,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             is_active=False
         )
         return user
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -9,10 +9,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'bio', 'image']
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+
 
 class MasterClassCreateSerializer(serializers.ModelSerializer):
     categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True)
@@ -22,6 +24,7 @@ class MasterClassCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MasterClass
         fields = '__all__'
+
 
 class MasterClassSerializer(serializers.ModelSerializer):
     organizer = UserSerializer()

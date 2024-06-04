@@ -1,5 +1,7 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
 from rest_framework import viewsets
+from rest_framework.decorators import action
+
 from .models import User, Role, Contact
 from .serializer import UserSerializer, RoleSerializer, ContactSerializer
 from ..masterclasses.models import Category, FavoriteMasterClass
@@ -16,6 +18,24 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .serializer import UserRegistrationSerializer
 from django.core.mail import EmailMessage
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    @action(detail=False, methods=['get'], url_path='organizers')
+    def get_organizers(self, request):
+        organizers = User.objects.filter(role__name='Organizer')
+        serializer = self.get_serializer(organizers, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='speakers')
+    def get_speakers(self, request):
+        speakers = User.objects.filter(role__name='Speaker')
+        serializer = self.get_serializer(speakers, many=True)
+        return Response(serializer.data)
+
 
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
@@ -37,6 +57,7 @@ class UserRegistrationView(generics.CreateAPIView):
         email.content_subtype = "html"  # this is the crucial part
         email.send()
 
+
 class ActivateView(generics.GenericAPIView):
     def get(self, request, uidb64, token):
         try:
@@ -51,11 +72,6 @@ class ActivateView(generics.GenericAPIView):
             return Response({'message': 'Учётная запись успешно подтверждена'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Неккоректная ссылка'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 
 class RoleViewSet(viewsets.ModelViewSet):
