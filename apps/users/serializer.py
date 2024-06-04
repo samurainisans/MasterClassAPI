@@ -2,6 +2,19 @@
 from rest_framework import serializers
 from .models import User, Role, Contact
 
+# /password-reset/
+# method: post
+# data { email: str}
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+# password-reset-confirm/<uidb64>/<token>/
+# method: get
+# data { password: str}
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
