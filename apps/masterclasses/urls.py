@@ -8,8 +8,8 @@ router = DefaultRouter()
 router.register(r'', MasterClassViewSet, basename='masterclass')
 
 urlpatterns = [
-    path('cities/', CitiesListView.as_view()),
-    path('categories/', CategoryListView.as_view()),
+    path('cities/', CitiesListView.as_view(), name='cities-list'),
+    path('categories/', CategoryListView.as_view(), name='categories-list'),
     path('<int:masterclass_id>/participants/', MasterClassParticipantsView.as_view(), name='masterclass-participants'),
     path('', include(router.urls)),
 ]

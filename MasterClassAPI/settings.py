@@ -33,7 +33,9 @@ INSTALLED_APPS = [
     'django_filters',
 ]
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 AUTH_USER_MODEL = 'users.User'
 
@@ -72,11 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'MasterClassAPI.wsgi.application'
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-}
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
@@ -111,6 +108,7 @@ DATABASES = {
         'PASSWORD': '3225',  # Ваш пароль PostgreSQL
         'HOST': 'localhost',  # Адрес сервера базы данных, если локально, то 'localhost'
         'PORT': '5432',  # Порт PostgreSQL, стандартный порт 5432
+        'CONN_MAX_AGE': 300
     }
 }
 
