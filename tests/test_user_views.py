@@ -1,3 +1,4 @@
+# C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI\tests\test_user_views.py
 import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient

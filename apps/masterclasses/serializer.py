@@ -3,15 +3,18 @@ from rest_framework import serializers
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from ..users.models import User
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
+
 
 class MasterClassCreateSerializer(serializers.ModelSerializer):
     categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True)
@@ -24,6 +27,7 @@ class MasterClassCreateSerializer(serializers.ModelSerializer):
                   'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
                   'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
 
+
 class MasterClassSerializer(serializers.ModelSerializer):
     organizer = UserSerializer()
     speaker = UserSerializer()
@@ -35,6 +39,7 @@ class MasterClassSerializer(serializers.ModelSerializer):
                   'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
                   'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
 
+
 class UserMasterClassSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
@@ -42,10 +47,12 @@ class UserMasterClassSerializer(serializers.ModelSerializer):
         model = UserMasterClass
         fields = ['user', 'register_state', 'date_register']
 
+
 class FavoriteMasterClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteMasterClass
         fields = ['id', 'user', 'master_class']
+
 
 class ParticipantSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -53,6 +60,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = ['user', 'registered_at']
+
 
 class CitySerializer(serializers.Serializer):
     locality = serializers.CharField(max_length=255)

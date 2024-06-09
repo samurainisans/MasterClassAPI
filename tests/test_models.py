@@ -1,3 +1,4 @@
+# C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI\tests\test_models.py
 import pytest
 from django.contrib.auth import get_user_model
 from apps.masterclasses.models import Category, MasterClass, UserMasterClass, FavoriteMasterClass, Participant
