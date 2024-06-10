@@ -28,6 +28,19 @@ class MasterClassCreateSerializer(serializers.ModelSerializer):
                   'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
 
 
+class MasterClassUpdateSerializer(serializers.ModelSerializer):
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), many=True)
+    organizer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    speaker = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = MasterClass
+        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
+                  'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
+                  'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
+        read_only_fields = ['id']
+
+
 class MasterClassSerializer(serializers.ModelSerializer):
     organizer = UserSerializer()
     speaker = UserSerializer()
@@ -49,6 +62,8 @@ class UserMasterClassSerializer(serializers.ModelSerializer):
 
 
 class FavoriteMasterClassSerializer(serializers.ModelSerializer):
+    master_class = MasterClassSerializer()
+
     class Meta:
         model = FavoriteMasterClass
         fields = ['id', 'user', 'master_class']

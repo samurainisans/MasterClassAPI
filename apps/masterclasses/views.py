@@ -1,17 +1,20 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/masterclasses/views.py
+
 import django_filters
-from rest_framework import viewsets, generics
+from rest_framework.response import Response
+from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-
+from rest_framework.permissions import IsAuthenticated
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
-    FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer, MasterClassCreateSerializer
-
+    FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer, MasterClassCreateSerializer, MasterClassUpdateSerializer
+from ..users.models import User
 
 class MasterClassPagination(PageNumberPagination):
     page_size = 20
@@ -25,16 +28,48 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
 class UserMasterClassViewSet(viewsets.ModelViewSet):
     queryset = UserMasterClass.objects.select_related('user', 'master_class')
     serializer_class = UserMasterClassSerializer
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
 class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
-    queryset = FavoriteMasterClass.objects.select_related('user', 'master_class')
+    queryset = FavoriteMasterClass.objects.all()
     serializer_class = FavoriteMasterClassSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['post'], url_path='add')
+    def add_favorite(self, request):
+        user = request.user
+        master_class_id = request.data.get('master_class_id')
+        try:
+            master_class = MasterClass.objects.get(id=master_class_id)
+        except MasterClass.DoesNotExist:
+            return Response({'status': 'master class not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        favorite, created = FavoriteMasterClass.objects.get_or_create(user=user, master_class=master_class)
+        if created:
+            return Response({'status': 'master class added to favorites'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status': 'master class already in favorites'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='remove')
+    def remove_favorite(self, request):
+        user = request.user
+        master_class_id = request.data.get('master_class_id')
+        try:
+            favorite = FavoriteMasterClass.objects.get(user=user, master_class_id=master_class_id)
+            favorite.delete()
+            return Response({'status': 'master class removed from favorites'}, status=status.HTTP_200_OK)
+        except FavoriteMasterClass.DoesNotExist:
+            return Response({'status': 'favorite master class not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'], url_path='my')
+    def my_favorites(self, request):
+        user = request.user
+        favorites = FavoriteMasterClass.objects.filter(user=user)
+        serializer = self.get_serializer(favorites, many=True)
+        return Response(serializer.data)
 
 
 @method_decorator(cache_page(60 * 15), name='dispatch')
@@ -91,4 +126,14 @@ class MasterClassViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return MasterClassCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return MasterClassUpdateSerializer
         return MasterClassSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+        if user.role.name not in ['Admin', 'Organizer']:
+            return Response({'status': 'permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response({'status': 'master class deleted'}, status=status.HTTP_204_NO_CONTENT)

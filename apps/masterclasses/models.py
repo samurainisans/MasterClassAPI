@@ -47,6 +47,9 @@ class FavoriteMasterClass(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     master_class = models.ForeignKey(MasterClass, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.user} - {self.master_class}'
+
 
 class Participant(models.Model):
     user = models.ForeignKey(User, related_name='participating_masterclasses', on_delete=models.CASCADE)

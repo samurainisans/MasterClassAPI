@@ -1,11 +1,8 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
-from rest_framework import viewsets
-from rest_framework.decorators import action
-
-from .models import User, Role, Contact
-from .serializer import UserSerializer, RoleSerializer, ContactSerializer
-from ..masterclasses.models import Category, FavoriteMasterClass
-from ..masterclasses.serializer import CategorySerializer, FavoriteMasterClassSerializer
+from .serializer import PasswordResetSerializer, \
+    PasswordResetConfirmSerializer
+from ..masterclasses.models import FavoriteMasterClass
+from ..masterclasses.serializer import FavoriteMasterClassSerializer
 from rest_framework import viewsets
 from .models import User, Role, Contact
 from .serializer import UserSerializer, RoleSerializer, ContactSerializer
@@ -18,25 +15,65 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .serializer import UserRegistrationSerializer
 from django.core.mail import EmailMessage
+from rest_framework.generics import GenericAPIView
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+# Восстановление пароля
+class PasswordResetView(GenericAPIView):
+    serializer_class = PasswordResetSerializer
 
-    @action(detail=False, methods=['get'], url_path='organizers')
-    def get_organizers(self, request):
-        organizers = User.objects.filter(role__name='Organizer')
-        serializer = self.get_serializer(organizers, many=True)
-        return Response(serializer.data)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({'error': 'Пользователь с таким email не найден'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['get'], url_path='speakers')
-    def get_speakers(self, request):
-        speakers = User.objects.filter(role__name='Speaker')
-        serializer = self.get_serializer(speakers, many=True)
-        return Response(serializer.data)
+            current_site = get_current_site(request)
+            mail_subject = 'Сброс пароля'
+            message = render_to_string('password_reset_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+            to_email = user.email
+            email = EmailMessage(
+                mail_subject, message, to=[to_email]
+            )
+            email.content_subtype = "html"  # this is the crucial part
+            email.send()
+            return Response({'message': 'Письмо с инструкциями по сбросу пароля отправлено'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# подтверждение смены пароля
+class PasswordResetConfirmView(GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request, uidb64, token, *args, **kwargs):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                password = serializer.validated_data['password']
+                user.set_password(password)
+                user.save()
+                return Response({'message': 'Пароль успешно изменен'}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'error': 'Некорректная ссылка или токен'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Регистрация пользователя
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
@@ -58,6 +95,7 @@ class UserRegistrationView(generics.CreateAPIView):
         email.send()
 
 
+# Верификация аккаунта
 class ActivateView(generics.GenericAPIView):
     def get(self, request, uidb64, token):
         try:
@@ -72,6 +110,11 @@ class ActivateView(generics.GenericAPIView):
             return Response({'message': 'Учётная запись успешно подтверждена'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Неккоректная ссылка'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 class RoleViewSet(viewsets.ModelViewSet):
