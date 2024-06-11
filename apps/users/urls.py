@@ -14,6 +14,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('roles/', RoleViewSet.as_view({'get': 'list'}), name='roles-list'),  # Добавляем маршрут для ролей
+    path('roles/', RoleViewSet.as_view({'get': 'list'}), name='roles-list'),
     path('', include(router.urls)),
 ]
