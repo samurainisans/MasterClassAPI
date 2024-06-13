@@ -130,3 +130,32 @@ class ContactViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = FavoriteMasterClass.objects.all()
     serializer_class = FavoriteMasterClassSerializer
+
+
+from django.http import HttpResponse
+import os
+
+def debug_view(request):
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    static_root = os.path.join(base_dir, 'staticfiles')
+    media_root = os.path.join(base_dir, 'media')
+
+    def list_files(directory):
+        file_list = []
+        for root, dirs, files in os.walk(directory):
+            for filename in files:
+                file_list.append(os.path.join(root, filename))
+        return file_list
+
+    static_files = list_files(static_root)
+    media_files = list_files(media_root)
+
+    response = HttpResponse()
+    response.write(f"BASE_DIR: {base_dir}<br>")
+    response.write("<h2>Static Files</h2><br>")
+    for file in static_files:
+        response.write(file + "<br>")
+    response.write("<h2>Media Files</h2><br>")
+    for file in media_files:
+        response.write(file + "<br>")
+    return response

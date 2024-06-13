@@ -1,7 +1,7 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, PasswordResetView, PasswordResetConfirmView, UserRegistrationView, ActivateView, RoleViewSet
+from .views import debug_view, UserViewSet, PasswordResetView, PasswordResetConfirmView, UserRegistrationView, ActivateView, RoleViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = DefaultRouter()
@@ -16,4 +16,5 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('roles/', RoleViewSet.as_view({'get': 'list'}), name='roles-list'),
     path('', include(router.urls)),
+    path('debug/', debug_view)
 ]

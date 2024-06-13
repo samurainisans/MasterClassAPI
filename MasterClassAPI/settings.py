@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,12 +15,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-((py*n_e9!=e!3ixo!2#&1jn!i^&g4x=yg$s=$yg2)-pnzy6y2'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
 # Application definition
 
@@ -110,14 +111,26 @@ SIMPLE_JWT = {
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'MasterClass',  # Имя вашей базы данных
+#         'USER': 'postgres',  # Ваше имя пользователя PostgreSQL
+#         'PASSWORD': '3225',  # Ваш пароль PostgreSQL
+#         'HOST': 'localhost',  # Адрес сервера базы данных, если локально, то 'localhost'
+#         'PORT': '5432',  # Порт PostgreSQL, стандартный порт 5432
+#         'CONN_MAX_AGE': 300
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'MasterClass',  # Имя вашей базы данных
-        'USER': 'postgres',  # Ваше имя пользователя PostgreSQL
-        'PASSWORD': '3225',  # Ваш пароль PostgreSQL
-        'HOST': 'localhost',  # Адрес сервера базы данных, если локально, то 'localhost'
-        'PORT': '5432',  # Порт PostgreSQL, стандартный порт 5432
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', cast=int),
         'CONN_MAX_AGE': 300
     }
 }
@@ -154,8 +167,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Убедитесь, что STATIC_ROOT указывает на 'staticfiles' директорию
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -163,12 +180,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 2
 
-EMAIL_HOST = 'smtp.mail.ru'
-EMAIL_PORT = 2525
-EMAIL_HOST_USER = "event.place@mail.ru"
-EMAIL_HOST_PASSWORD = "896z1YntZkJKzz68f8Ce"
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+# EMAIL_HOST = 'smtp.mail.ru'
+# EMAIL_PORT = 2525
+# EMAIL_HOST_USER = "event.place@mail.ru"
+# EMAIL_HOST_PASSWORD = "896z1YntZkJKzz68f8Ce"
+# EMAIL_USE_TLS = True
+# EMAIL_USE_SSL = False
+
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
