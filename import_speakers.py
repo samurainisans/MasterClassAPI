@@ -19,8 +19,7 @@ with open(file_path, 'r', encoding='utf-8') as file:
     speakers = json.load(file)
 
 # Получение роли "Speaker"
-speaker_role = Role.objects.get(id=4)
-
+speaker_role = Role.objects.get(name='Speaker')
 # Вставка спикеров в базу данных
 for speaker in speakers:
     name_parts = speaker['name'].split()

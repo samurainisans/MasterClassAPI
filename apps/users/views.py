@@ -1,9 +1,15 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
-from .serializer import PasswordResetSerializer, \
-    PasswordResetConfirmSerializer
+from django.contrib.auth import authenticate
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.translation import gettext_lazy as _
+from .serializer import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegistrationSerializer, \
+    LoginSerializer
 from ..masterclasses.models import FavoriteMasterClass
 from ..masterclasses.serializer import FavoriteMasterClassSerializer
-from rest_framework import viewsets
+from rest_framework import viewsets, generics, status
+from rest_framework.response import Response
 from .models import User, Role, Contact
 from .serializer import UserSerializer, RoleSerializer, ContactSerializer
 from django.contrib.sites.shortcuts import get_current_site
@@ -11,9 +17,6 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .serializer import UserRegistrationSerializer
 from django.core.mail import EmailMessage
 from rest_framework.generics import GenericAPIView
 
@@ -93,6 +96,7 @@ class UserRegistrationView(generics.CreateAPIView):
         )
         email.content_subtype = "html"  # this is the crucial part
         email.send()
+        return Response({'message': 'Пользователь успешно зарегистрирован. Проверьте почту для подтверждения аккаунта'}, status=status.HTTP_201_CREATED)
 
 
 # Верификация аккаунта
@@ -130,3 +134,52 @@ class ContactViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = FavoriteMasterClass.objects.all()
     serializer_class = FavoriteMasterClassSerializer
+
+
+class SpeakerViewSet(viewsets.ViewSet):
+    def list(self, request):
+        speakers = User.objects.filter(role__name='Speaker')
+        serializer = UserSerializer(speakers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class OrganizerViewSet(viewsets.ViewSet):
+    def list(self, request):
+        organizers = User.objects.filter(role__name='Organizer')
+        serializer = UserSerializer(organizers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserLoginView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': _('Неверные учетные данные')}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_active:
+            return Response({'error': _('Аккаунт не активирован. Проверьте почту для подтверждения.')},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        if not user.verified:
+            return Response({'error': _('Аккаунт не подтвержден. Проверьте почту для подтверждения.')},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': _('Неверные учетные данные')}, status=status.HTTP_401_UNAUTHORIZED)
