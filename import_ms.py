@@ -21,10 +21,14 @@ with open(file_path, 'r', encoding='utf-8') as file:
     masterclasses = json.load(file)
 
 # Получение организатора
-organizer = User.objects.get(id=182)
+organizer = User.objects.get(id=181)
 
 # Получение всех пользователей с ролью "Speaker"
-speakers = list(User.objects.filter(role_id=4))
+speakers = User.objects.get(name='Speaker')
+# Функция для генерации цены
+def generate_price():
+    price = random.randint(1500, 3000)
+    return round(price / 100) * 100
 
 # Вставка мастер-классов в базу данных
 for mc in masterclasses:
@@ -35,6 +39,9 @@ for mc in masterclasses:
     start_date = timezone.make_aware(timezone.datetime.strptime(mc['start_date'], '%Y-%m-%dT%H:%M:%S'))
     end_date = timezone.make_aware(timezone.datetime.strptime(mc['end_date'], '%Y-%m-%dT%H:%M:%S'))
     end_register_date = timezone.make_aware(timezone.datetime.strptime(mc['end_register_date'], '%Y-%m-%dT%H:%M:%S'))
+
+    # Генерация цены
+    price = generate_price()
 
     # Создание мастер-класса
     masterclass = MasterClass.objects.create(
@@ -55,7 +62,8 @@ for mc in masterclasses:
         house=mc.get('house', ''),
         postal_code=mc.get('postal_code', ''),
         organizer=organizer,
-        speaker=speaker
+        speaker=speaker,
+        price=price
     )
 
     # Добавление категорий к мастер-классу
@@ -64,4 +72,4 @@ for mc in masterclasses:
         masterclass.categories.add(category)
 
     masterclass.save()
-    print(f'Successfully created masterclass: {mc["title"]}')
+    print(f'Successfully created masterclass: {mc["title"]} with price {price}')

@@ -2,25 +2,38 @@ import os
 import django
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 # Установка настроек Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MasterClassAPI.settings')
 django.setup()
 
 from apps.masterclasses.models import MasterClass
+from django.conf import settings
 
-# Конфигурация статической ссылки Unsplash
-UNSPLASH_URL = 'https://source.unsplash.com/random/400x300'
+# Конфигурация статической ссылки Picsum
+PICSUM_URL = 'https://picsum.photos/400/300'
 
 def get_image_url():
-    response = requests.get(UNSPLASH_URL)
-    if response.status_code == 200:
-        return response.url
+    try:
+        response = requests.get(PICSUM_URL)
+        if response.status_code == 200:
+            return response.content
+    except requests.RequestException as e:
+        print(f'Request failed: {e}')
     return None
 
-def update_masterclass(masterclass):
-    image_url = get_image_url()
-    if image_url:
+def save_image_to_server(image_content, filename):
+    path = os.path.join('masterclass_images', filename)
+    saved_path = default_storage.save(path, ContentFile(image_content))
+    return os.path.join(settings.MEDIA_URL, saved_path.lstrip('/'))
+
+def update_masterclass_with_image(masterclass):
+    image_content = get_image_url()
+    if image_content:
+        filename = f'masterclass_{masterclass.id}.jpg'
+        image_url = save_image_to_server(image_content, filename)
         masterclass.image_url = image_url
         masterclass.save()
         return masterclass.id, image_url
@@ -31,7 +44,7 @@ masterclasses = MasterClass.objects.all()
 
 # Создание пула потоков для параллельного выполнения
 with ThreadPoolExecutor(max_workers=50) as executor:
-    futures = [executor.submit(update_masterclass, mc) for mc in masterclasses]
+    futures = [executor.submit(update_masterclass_with_image, mc) for mc in masterclasses]
 
     for future in as_completed(futures):
         mc_id, image_url = future.result()

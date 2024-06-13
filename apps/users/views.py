@@ -1,9 +1,15 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
-from .serializer import PasswordResetSerializer, \
-    PasswordResetConfirmSerializer
+from django.contrib.auth import authenticate
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.translation import gettext_lazy as _
+from .serializer import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegistrationSerializer, \
+    LoginSerializer
 from ..masterclasses.models import FavoriteMasterClass
 from ..masterclasses.serializer import FavoriteMasterClassSerializer
-from rest_framework import viewsets
+from rest_framework import viewsets, generics, status
+from rest_framework.response import Response
 from .models import User, Role, Contact
 from .serializer import UserSerializer, RoleSerializer, ContactSerializer
 from django.contrib.sites.shortcuts import get_current_site
@@ -11,9 +17,6 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .serializer import UserRegistrationSerializer
 from django.core.mail import EmailMessage
 from rest_framework.generics import GenericAPIView
 
@@ -93,6 +96,7 @@ class UserRegistrationView(generics.CreateAPIView):
         )
         email.content_subtype = "html"  # this is the crucial part
         email.send()
+        return Response({'message': 'Пользователь успешно зарегистрирован. Проверьте почту для подтверждения аккаунта'}, status=status.HTTP_201_CREATED)
 
 
 # Верификация аккаунта
@@ -132,30 +136,50 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteMasterClassSerializer
 
 
-from django.http import HttpResponse
-import os
+class SpeakerViewSet(viewsets.ViewSet):
+    def list(self, request):
+        speakers = User.objects.filter(role__name='Speaker')
+        serializer = UserSerializer(speakers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-def debug_view(request):
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    static_root = os.path.join(base_dir, 'staticfiles')
-    media_root = os.path.join(base_dir, 'media')
 
-    def list_files(directory):
-        file_list = []
-        for root, dirs, files in os.walk(directory):
-            for filename in files:
-                file_list.append(os.path.join(root, filename))
-        return file_list
+class OrganizerViewSet(viewsets.ViewSet):
+    def list(self, request):
+        organizers = User.objects.filter(role__name='Organizer')
+        serializer = UserSerializer(organizers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    static_files = list_files(static_root)
-    media_files = list_files(media_root)
 
-    response = HttpResponse()
-    response.write(f"BASE_DIR: {base_dir}<br>")
-    response.write("<h2>Static Files</h2><br>")
-    for file in static_files:
-        response.write(file + "<br>")
-    response.write("<h2>Media Files</h2><br>")
-    for file in media_files:
-        response.write(file + "<br>")
-    return response
+class UserLoginView(APIView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': _('Неверные учетные данные')}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_active:
+            return Response({'error': _('Аккаунт не активирован. Проверьте почту для подтверждения.')},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        if not user.verified:
+            return Response({'error': _('Аккаунт не подтвержден. Проверьте почту для подтверждения.')},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': _('Неверные учетные данные')}, status=status.HTTP_401_UNAUTHORIZED)

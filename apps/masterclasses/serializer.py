@@ -23,9 +23,12 @@ class MasterClassCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MasterClass
-        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
-                  'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
-                  'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
+        fields = [
+            'id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
+            'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker', 'location_name',
+            'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code', 'requires_approval',
+            'price'
+        ]
 
 
 class MasterClassUpdateSerializer(serializers.ModelSerializer):
@@ -35,9 +38,12 @@ class MasterClassUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MasterClass
-        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
-                  'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
-                  'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
+        fields = [
+            'id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
+            'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker', 'location_name',
+            'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code', 'requires_approval',
+            'price'
+        ]
         read_only_fields = ['id']
 
 
@@ -48,9 +54,12 @@ class MasterClassSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MasterClass
-        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
-                  'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker',
-                  'location_name', 'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code']
+        fields = [
+            'id', 'title', 'description', 'start_date', 'end_date', 'duration', 'end_register_date',
+            'categories', 'longitude', 'latitude', 'image_url', 'organizer', 'speaker', 'location_name',
+            'country', 'province', 'area', 'locality', 'street', 'house', 'postal_code', 'requires_approval',
+            'price'
+        ]
 
 
 class UserMasterClassSerializer(serializers.ModelSerializer):
