@@ -15,7 +15,7 @@ class MasterClass(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    duration = models.PositiveIntegerField()  # duration in minutes
+    duration = models.PositiveIntegerField()
     end_register_date = models.DateTimeField()
     categories = models.ManyToManyField(Category, related_name='masterclasses')
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -67,59 +67,3 @@ class Participant(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.masterclass}'
-
-#
-# {
-#     "password": [
-#         "This field may not be blank."
-#     ],
-#     "username": [
-#         "This field may not be blank."
-#     ],
-#     "first_name": [
-#         "This field may not be blank."
-#     ],
-#     "last_name": [
-#         "This field may not be blank."
-#     ],
-#     "email": [
-#         "This field may not be blank."
-#     ]
-# }
-
-#
-# {
-#     "title": [
-#         "This field may not be blank."
-#     ],
-#     "description": [
-#         "This field may not be blank."
-#     ],
-#     "start_date": [
-#         "Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z]."
-#     ],
-#     "duration": [
-#         "A valid integer is required."
-#     ],
-#     "end_register_date": [
-#         "Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z]."
-#     ],
-#     "location_name": [
-#         "This field may not be blank."
-#     ],
-#     "country": [
-#         "This field may not be blank."
-#     ],
-#     "street": [
-#         "This field may not be blank."
-#     ],
-#     "house": [
-#         "This field may not be blank."
-#     ],
-#     "postal_code": [
-#         "This field may not be blank."
-#     ],
-#     "categories": [
-#         "This list may not be empty."
-#     ]
-# }

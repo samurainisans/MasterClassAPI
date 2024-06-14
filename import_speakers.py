@@ -3,6 +3,7 @@ import os
 import django
 from pathlib import Path
 from django.contrib.auth.hashers import make_password
+from concurrent.futures import ThreadPoolExecutor
 
 # Установка настроек Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MasterClassAPI.settings')
@@ -20,8 +21,8 @@ with open(file_path, 'r', encoding='utf-8') as file:
 
 # Получение роли "Speaker"
 speaker_role = Role.objects.get(name='Speaker')
-# Вставка спикеров в базу данных
-for speaker in speakers:
+
+def create_or_get_user(speaker):
     name_parts = speaker['name'].split()
     first_name = name_parts[0]
     last_name = name_parts[1] if len(name_parts) > 1 else ''
@@ -40,3 +41,7 @@ for speaker in speakers:
         print(f'Successfully created user: {speaker["name"]}')
     else:
         print(f'User already exists: {speaker["name"]}')
+
+# Использование ThreadPoolExecutor для многопоточности
+with ThreadPoolExecutor(max_workers=50) as executor:
+    executor.map(create_or_get_user, speakers)

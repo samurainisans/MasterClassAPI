@@ -2,8 +2,6 @@
 from rest_framework import serializers
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from ..users.models import User
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

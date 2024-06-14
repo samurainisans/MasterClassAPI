@@ -1,6 +1,8 @@
 # masterclasses/views.py
+import logging
 
 import django_filters
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
@@ -10,12 +12,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
     FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer, MasterClassCreateSerializer, \
     MasterClassUpdateSerializer
 from ..users.models import User
+
+logger = logging.getLogger(__name__)
 
 
 class MasterClassPagination(PageNumberPagination):
@@ -23,7 +27,8 @@ class MasterClassPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
+
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -43,27 +48,25 @@ class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
     def add_favorite(self, request):
         user = request.user
         master_class_id = request.data.get('master_class_id')
-        try:
-            master_class = MasterClass.objects.get(id=master_class_id)
-        except MasterClass.DoesNotExist:
-            return Response({'status': 'master class not found'}, status=status.HTTP_404_NOT_FOUND)
+        master_class = get_object_or_404(MasterClass, id=master_class_id)
 
         favorite, created = FavoriteMasterClass.objects.get_or_create(user=user, master_class=master_class)
         if created:
-            return Response({'status': 'master class added to favorites'}, status=status.HTTP_201_CREATED)
+            return Response({'status': 'favorite added', 'detail': 'Master class added to favorites.'},
+                            status=status.HTTP_201_CREATED)
         else:
-            return Response({'status': 'master class already in favorites'}, status=status.HTTP_200_OK)
+            return Response({'status': 'already favorite', 'detail': 'Master class already in favorites.'},
+                            status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['delete'], url_path='remove')
     def remove_favorite(self, request):
         user = request.user
         master_class_id = request.data.get('master_class_id')
-        try:
-            favorite = FavoriteMasterClass.objects.get(user=user, master_class_id=master_class_id)
-            favorite.delete()
-            return Response({'status': 'master class removed from favorites'}, status=status.HTTP_200_OK)
-        except FavoriteMasterClass.DoesNotExist:
-            return Response({'status': 'favorite master class not found'}, status=status.HTTP_404_NOT_FOUND)
+        favorite = get_object_or_404(FavoriteMasterClass, user=user, master_class_id=master_class_id)
+
+        favorite.delete()
+        return Response({'status': 'favorite removed', 'detail': 'Master class removed from favorites.'},
+                        status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='my')
     def my_favorites(self, request):
@@ -73,7 +76,7 @@ class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -92,7 +95,7 @@ class MasterClassParticipantsView(generics.ListAPIView):
         return UserMasterClass.objects.filter(master_class_id=masterclass_id).select_related('user', 'master_class')
 
 
-@method_decorator(cache_page(60 * 15), name='dispatch')
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class CitiesListView(generics.ListAPIView):
     serializer_class = CitySerializer
 
@@ -112,16 +115,16 @@ class MasterClassFilter(django_filters.FilterSet):
         fields = ['categories', 'locality', 'start_date', 'end_date']
 
 
-@method_decorator(cache_page(60 * 15), name='list')
+@method_decorator(cache_page(60 * 5), name='list')
 class MasterClassViewSet(viewsets.ModelViewSet):
     queryset = MasterClass.objects.annotate(participant_count=Count('participants')).select_related('organizer',
                                                                                                     'speaker').prefetch_related(
         'categories')
-    serializer_class = MasterClassSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = MasterClassFilter
     search_fields = ['title']
     pagination_class = MasterClassPagination
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -133,8 +136,14 @@ class MasterClassViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         user = request.user
-        if user.role.name not in ['Admin', 'Organizer']:
-            return Response({'status': 'permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        required_permission = 'masterclasses.delete_masterclass'
+
+        # Проверка, имеет ли пользователь необходимое разрешение
+        if not user.has_perm(required_permission):
+            return Response(
+                {'status': 'permission denied', 'detail': 'You do not have permission to delete this masterclass.'},
+                status=status.HTTP_403_FORBIDDEN)
+
         self.perform_destroy(instance)
         return Response({'status': 'master class deleted'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -144,36 +153,47 @@ class MasterClassViewSet(viewsets.ModelViewSet):
         try:
             master_class = MasterClass.objects.get(pk=pk)
         except MasterClass.DoesNotExist:
-            return Response({'status': 'master class not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'not found', 'detail': 'Master class not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         if UserMasterClass.objects.filter(user=user, master_class=master_class).exists():
-            return Response({'status': 'already registered'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'status': 'already registered', 'detail': 'You are already registered for this masterclass.'},
+                status=status.HTTP_400_BAD_REQUEST)
 
         if master_class.requires_approval:
             UserMasterClass.objects.create(user=user, master_class=master_class, register_state='pending')
-            return Response({'status': 'registration pending approval'}, status=status.HTTP_201_CREATED)
+            return Response({'status': 'registration pending', 'detail': 'Registration is pending approval.'},
+                            status=status.HTTP_201_CREATED)
         else:
             UserMasterClass.objects.create(user=user, master_class=master_class, register_state='accepted')
-            return Response({'status': 'registration successful'}, status=status.HTTP_201_CREATED)
+            return Response({'status': 'registration successful', 'detail': 'Registration successful.'},
+                            status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='confirm_registration', permission_classes=[IsAuthenticated])
     def confirm_registration(self, request, pk=None):
         organizer = request.user
         if not organizer.role.name in ['Admin', 'Organizer']:
-            return Response({'status': 'permission denied'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {'status': 'permission denied', 'detail': 'You do not have permission to confirm registrations.'},
+                status=status.HTTP_403_FORBIDDEN)
 
         user_masterclass_id = request.data.get('user_masterclass_id')
         new_state = request.data.get('new_state')
 
         if new_state not in ['accepted', 'rejected']:
-            return Response({'status': 'invalid state'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'invalid state', 'detail': 'Invalid state provided.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user_masterclass = UserMasterClass.objects.get(pk=user_masterclass_id, master_class_id=pk)
         except UserMasterClass.DoesNotExist:
-            return Response({'status': 'registration not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'not found', 'detail': 'Registration not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         user_masterclass.register_state = new_state
         user_masterclass.save()
 
-        return Response({'status': f'registration {new_state}'}, status=status.HTTP_200_OK)
+        return Response({'status': f'registration {new_state}', 'detail': f'Registration has been {new_state}.'},
+                        status=status.HTTP_200_OK)
+

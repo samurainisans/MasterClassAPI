@@ -5,45 +5,46 @@ import random
 from pathlib import Path
 from django.utils import timezone
 
-# Установка настроек Django
+# установка настроек django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MasterClassAPI.settings')
 django.setup()
 
 from apps.masterclasses.models import MasterClass, Category
 from apps.users.models import User
 
-# Путь к файлу с мастер-классами
+# путь к файлу с мастер-классами
 base_dir = Path(__file__).resolve().parent
 file_path = 'enriched_masterclasses.json'
 
-# Чтение данных из файла
+# чтение данных из файла
 with open(file_path, 'r', encoding='utf-8') as file:
     masterclasses = json.load(file)
 
-# Получение организатора
-organizer = User.objects.get(id=181)
+# получение организатора
+organizer = User.objects.get(role=2)
 
-# Получение всех пользователей с ролью "Speaker"
-speakers = User.objects.get(name='Speaker')
-# Функция для генерации цены
+# получение всех пользователей с ролью "Speaker"
+speakers = User.objects.filter(role__name='Speaker')
+
+# функция для генерации цены
 def generate_price():
     price = random.randint(1500, 3000)
     return round(price / 100) * 100
 
-# Вставка мастер-классов в базу данных
+# вставка мастер-классов в базу данных
 for mc in masterclasses:
-    # Выбор случайного спикера
+    # выбор случайного спикера
     speaker = random.choice(speakers)
 
-    # Обработка naive datetime
+    # обработка naive datetime
     start_date = timezone.make_aware(timezone.datetime.strptime(mc['start_date'], '%Y-%m-%dT%H:%M:%S'))
     end_date = timezone.make_aware(timezone.datetime.strptime(mc['end_date'], '%Y-%m-%dT%H:%M:%S'))
     end_register_date = timezone.make_aware(timezone.datetime.strptime(mc['end_register_date'], '%Y-%m-%dT%H:%M:%S'))
 
-    # Генерация цены
+    # генерация цены
     price = generate_price()
 
-    # Создание мастер-класса
+    # создание мастер-класса
     masterclass = MasterClass.objects.create(
         title=mc['title'],
         description=mc['description'],
@@ -66,10 +67,10 @@ for mc in masterclasses:
         price=price
     )
 
-    # Добавление категорий к мастер-классу
+    # добавление категорий к мастер-классу
     for category_name in mc['categories']:
         category = Category.objects.get(name=category_name)
         masterclass.categories.add(category)
 
     masterclass.save()
-    print(f'Successfully created masterclass: {mc["title"]} with price {price}')
+    print(f'successfully created masterclass: {mc["title"]} with price {price}')

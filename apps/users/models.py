@@ -1,5 +1,5 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/models.py
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Permission
 from django.db import models
 
 
@@ -24,6 +24,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def permissions(self):
+        if self.role:
+            return Permission.objects.filter(group__name=self.role.name)
+        return Permission.objects.none()
 
 
 class Contact(models.Model):

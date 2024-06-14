@@ -12,7 +12,6 @@ roles = [
     'Admin',
     'Organizer',
     'Speaker',
-    'User',
     'Participant'
 ]
 

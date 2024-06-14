@@ -96,7 +96,8 @@ class UserRegistrationView(generics.CreateAPIView):
         )
         email.content_subtype = "html"  # this is the crucial part
         email.send()
-        return Response({'message': 'Пользователь успешно зарегистрирован. Проверьте почту для подтверждения аккаунта'}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Пользователь успешно зарегистрирован. Проверьте почту для подтверждения аккаунта'},
+                        status=status.HTTP_201_CREATED)
 
 
 # Верификация аккаунта
