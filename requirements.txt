@@ -1,0 +1,29 @@
+Django>=5.0.6,<5.1a1
+PyJWT==2.8.0
+asgiref==3.8.1
+certifi==2024.6.2
+charset-normalizer==3.3.2
+coverage>=7.5.1, <7.5.3
+dj-database-url==2.2.0
+django-appconf==1.0.6
+django-cors-headers==4.3.1
+django-filter==24.2
+django-user-accounts==3.3.2
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+geographiclib==2.0
+geopy==2.4.1
+idna==3.7
+pillow==10.3.0
+pip>=24.0,<24.1b1
+psycopg2==2.9.9
+python-decouple==3.8
+pytz==2024.1
+requests==2.32.3
+setuptools>=60.2.0, < 70.0.0
+sqlparse==0.5.0
+typing-extensions>=4.11.0,<4.12.2
+tzdata==2024.1
+urllib3==2.2.1
+wheel>=0.37.1,<0.43.0
+gunicorn==20.1.0
