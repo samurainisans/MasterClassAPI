@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext_lazy as _
 from .serializer import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegistrationSerializer, \
-    LoginSerializer, UserDetailSerializer
+    LoginSerializer, UserDetailSerializer, UserUpdateSerializer
 from ..masterclasses.models import FavoriteMasterClass
 from ..masterclasses.serializer import FavoriteMasterClassSerializer
 from rest_framework import viewsets, generics, status
@@ -126,6 +126,14 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.get_object()
         serializer = UserDetailSerializer(user)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RoleViewSet(viewsets.ModelViewSet):

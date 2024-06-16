@@ -9,7 +9,7 @@ urlpatterns = [
     path('chat/', include('apps.chat.urls')),
     path('api/masterclasses/', include('apps.masterclasses.urls')),
     path('api/gis/', include('apps.gis.urls')),
-    # path('api/users/', include('apps.users.urls')),
+    path('api/users/', include('apps.users.urls')),
     path('', include('apps.users.urls')),
 ]
 

@@ -18,6 +18,6 @@ urlpatterns = [
     path('roles/', RoleViewSet.as_view({'get': 'list'}), name='roles-list'),
     path('speakers/', SpeakerViewSet.as_view({'get': 'list'}), name='speakers-list'),
     path('organizers/', UserViewSet.as_view({'get': 'list'}), name='organizers-list'),
-    path('<int:pk>/', UserViewSet.as_view({'get': 'retrieve'}), name='user-detail'),  # Новый маршрут
+    path('<int:pk>/', UserViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update'}), name='user-detail'),
     path('', include(router.urls)),
 ]
