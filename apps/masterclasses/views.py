@@ -1,4 +1,3 @@
-# masterclasses/views.py
 import logging
 
 import django_filters
@@ -12,7 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
+from rest_framework.permissions import IsAuthenticated, AllowAny, SAFE_METHODS, DjangoModelPermissions
 from .models import MasterClass, Category, UserMasterClass, FavoriteMasterClass, Participant
 from .serializer import MasterClassSerializer, CategorySerializer, UserMasterClassSerializer, \
     FavoriteMasterClassSerializer, ParticipantSerializer, CitySerializer, MasterClassCreateSerializer, \
@@ -29,22 +28,24 @@ class MasterClassPagination(PageNumberPagination):
 
 
 @method_decorator(cache_page(60 * 5), name='dispatch')
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
 
 
-class UserMasterClassViewSet(viewsets.ModelViewSet):
+class UserMasterClassViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = UserMasterClass.objects.select_related('user', 'master_class')
     serializer_class = UserMasterClassSerializer
+    permission_classes = [AllowAny]
 
 
-class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
+class FavoriteMasterClassViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FavoriteMasterClass.objects.all()
     serializer_class = FavoriteMasterClassSerializer
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['post'], url_path='add')
+    @action(detail=False, methods=['post'], url_path='add', permission_classes=[IsAuthenticated])
     def add_favorite(self, request):
         user = request.user
         master_class_id = request.data.get('master_class_id')
@@ -58,7 +59,7 @@ class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
             return Response({'status': 'already favorite', 'detail': 'Master class already in favorites.'},
                             status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['delete'], url_path='remove')
+    @action(detail=False, methods=['delete'], url_path='remove', permission_classes=[IsAuthenticated])
     def remove_favorite(self, request):
         user = request.user
         master_class_id = request.data.get('master_class_id')
@@ -68,7 +69,7 @@ class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
         return Response({'status': 'favorite removed', 'detail': 'Master class removed from favorites.'},
                         status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get'], url_path='my')
+    @action(detail=False, methods=['get'], url_path='my', permission_classes=[IsAuthenticated])
     def my_favorites(self, request):
         user = request.user
         favorites = FavoriteMasterClass.objects.filter(user=user)
@@ -80,15 +81,18 @@ class FavoriteMasterClassViewSet(viewsets.ModelViewSet):
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
 
 
 class ParticipantsListView(generics.ListAPIView):
     queryset = Participant.objects.select_related('user', 'master_class')
     serializer_class = ParticipantSerializer
+    permission_classes = [AllowAny]
 
 
 class MasterClassParticipantsView(generics.ListAPIView):
     serializer_class = UserMasterClassSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         masterclass_id = self.kwargs['masterclass_id']
@@ -98,6 +102,7 @@ class MasterClassParticipantsView(generics.ListAPIView):
 @method_decorator(cache_page(60 * 5), name='dispatch')
 class CitiesListView(generics.ListAPIView):
     serializer_class = CitySerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return [{'locality': locality} for locality in
@@ -106,7 +111,7 @@ class CitiesListView(generics.ListAPIView):
 
 class MasterClassFilter(django_filters.FilterSet):
     categories = django_filters.AllValuesMultipleFilter(field_name='categories__id')
-    locality = django_filters.AllValuesMultipleFilter(field_name='locality')
+    locality = django_filters.CharFilter(field_name='locality')
     start_date = django_filters.DateTimeFilter(field_name='start_date', lookup_expr='gte')
     end_date = django_filters.DateTimeFilter(field_name='end_date', lookup_expr='lte')
 
@@ -117,14 +122,16 @@ class MasterClassFilter(django_filters.FilterSet):
 
 @method_decorator(cache_page(60 * 5), name='list')
 class MasterClassViewSet(viewsets.ModelViewSet):
-    queryset = MasterClass.objects.annotate(participant_count=Count('participants')).select_related('organizer',
-                                                                                                    'speaker').prefetch_related(
-        'categories')
+    queryset = MasterClass.objects.annotate(participant_count=Count('participants')).select_related('organizer', 'speaker').prefetch_related('categories')
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = MasterClassFilter
     search_fields = ['title']
     pagination_class = MasterClassPagination
-    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [AllowAny()]
+        return [IsAuthenticated(), DjangoModelPermissions()]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -133,19 +140,27 @@ class MasterClassViewSet(viewsets.ModelViewSet):
             return MasterClassUpdateSerializer
         return MasterClassSerializer
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        user = request.user
-        required_permission = 'masterclasses.delete_masterclass'
 
-        # Проверка, имеет ли пользователь необходимое разрешение
-        if not user.has_perm(required_permission):
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.has_perm('masterclasses.add_masterclass'):
+            return Response({'status': 'permission denied', 'detail': 'You do not have permission to add masterclass.'},
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not request.user.has_perm('masterclasses.change_masterclass'):
             return Response(
-                {'status': 'permission denied', 'detail': 'You do not have permission to delete this masterclass.'},
+                {'status': 'permission denied', 'detail': 'You do not have permission to change masterclass.'},
                 status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
 
-        self.perform_destroy(instance)
-        return Response({'status': 'master class deleted'}, status=status.HTTP_204_NO_CONTENT)
+    def destroy(self, request, *args, **kwargs):
+        if not request.user.has_perm('masterclasses.delete_masterclass'):
+            return Response(
+                {'status': 'permission denied', 'detail': 'You do not have permission to delete masterclass.'},
+                status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'], url_path='register', permission_classes=[IsAuthenticated])
     def register(self, request, pk=None):
@@ -196,4 +211,14 @@ class MasterClassViewSet(viewsets.ModelViewSet):
 
         return Response({'status': f'registration {new_state}', 'detail': f'Registration has been {new_state}.'},
                         status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='by_city', permission_classes=[AllowAny])
+    def get_master_classes_by_city(self, request):
+        locality = request.query_params.get('locality', None)
+        if not locality:
+            return Response({'detail': 'Locality parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        master_classes = MasterClass.objects.filter(locality=locality)
+        serializer = self.get_serializer(master_classes, many=True)
+        return Response(serializer.data)
 
