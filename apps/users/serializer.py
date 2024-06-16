@@ -1,4 +1,5 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/serializer.py
+from django.contrib.auth.models import Permission, Group
 from rest_framework import serializers
 from .models import User, Role, Contact
 
@@ -47,6 +48,37 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = '__all__'
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ['id', 'name', 'codename', 'content_type']
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(source='role.name', read_only=True)
+    permissions = serializers.SerializerMethodField()
+    groups = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+    def get_permissions(self, obj):
+        permissions = Permission.objects.filter(group__user=obj).distinct()
+        return PermissionSerializer(permissions, many=True).data
+
+    def get_groups(self, obj):
+        groups = obj.groups.all()
+        return GroupSerializer(groups, many=True).data
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

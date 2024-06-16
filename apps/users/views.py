@@ -1,11 +1,12 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import Permission
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext_lazy as _
 from .serializer import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegistrationSerializer, \
-    LoginSerializer
+    LoginSerializer, UserDetailSerializer
 from ..masterclasses.models import FavoriteMasterClass
 from ..masterclasses.serializer import FavoriteMasterClassSerializer
 from rest_framework import viewsets, generics, status
@@ -46,7 +47,7 @@ class PasswordResetView(GenericAPIView):
             email = EmailMessage(
                 mail_subject, message, to=[to_email]
             )
-            email.content_subtype = "html"  # this is the crucial part
+            email.content_subtype = "html"
             email.send()
             return Response({'message': 'Письмо с инструкциями по сбросу пароля отправлено'}, status=status.HTTP_200_OK)
 
@@ -120,6 +121,11 @@ class ActivateView(generics.GenericAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = UserDetailSerializer(user)
+        return Response(serializer.data)
 
 
 class RoleViewSet(viewsets.ModelViewSet):
