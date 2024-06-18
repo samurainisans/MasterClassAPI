@@ -26,6 +26,5 @@ def get_user_permissions():
     return user_permissions_info
 
 
-# Example of usage
 for info in get_user_permissions():
     print(info)

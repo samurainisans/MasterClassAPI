@@ -31,10 +31,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'bio', 'age', 'gender', 'image']
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['gender'] = instance.get_gender_display()
+        return representation
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -83,6 +89,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_groups(self, obj):
         groups = obj.groups.all()
         return GroupSerializer(groups, many=True).data
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['gender'] = instance.get_gender_display()
+        return representation
 
 
 class LoginSerializer(serializers.Serializer):

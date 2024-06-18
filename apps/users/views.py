@@ -1,14 +1,16 @@
 # C:/Users/Nik/Desktop/DjangoBackendMasterclases/MasterClassAPI/apps/users/views.py
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import Permission
+from rest_framework.decorators import action
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.translation import gettext_lazy as _
 from .serializer import PasswordResetSerializer, PasswordResetConfirmSerializer, UserRegistrationSerializer, \
     LoginSerializer, UserDetailSerializer, UserUpdateSerializer
-from ..masterclasses.models import FavoriteMasterClass
-from ..masterclasses.serializer import FavoriteMasterClassSerializer
+from ..masterclasses.models import FavoriteMasterClass, MasterClass
+from ..masterclasses.serializer import FavoriteMasterClassSerializer, MasterClassSerializer
 from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
 from .models import User, Role, Contact
@@ -19,8 +21,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-from rest_framework.generics import GenericAPIView
-
+from django.middleware.csrf import get_token
+from django.shortcuts import get_object_or_404
 
 # Восстановление пароля
 class PasswordResetView(GenericAPIView):
@@ -132,13 +134,25 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response({
+                'message': 'Пользователь успешно обновлен'
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
+
+class OrganizerMasterClassView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, organizer_id):
+        organizer = get_object_or_404(User, id=organizer_id)
+        master_classes = MasterClass.objects.filter(organizer=organizer)
+        serializer = MasterClassSerializer(master_classes, many=True)
+        return Response(serializer.data)
 
 
 class ContactViewSet(viewsets.ModelViewSet):
@@ -162,6 +176,13 @@ class OrganizerViewSet(viewsets.ViewSet):
     def list(self, request):
         organizers = User.objects.filter(role__name='Organizer')
         serializer = UserSerializer(organizers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='masterclasses')
+    def get_masterclasses(self, request, pk=None):
+        organizer = get_object_or_404(User, pk=pk)
+        master_classes = MasterClass.objects.filter(organizer=organizer)
+        serializer = MasterClassSerializer(master_classes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -192,9 +213,13 @@ class UserLoginView(APIView):
 
         if user is not None:
             refresh = RefreshToken.for_user(user)
-            return Response({
+            csrf_token = get_token(request)
+            response = Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'csrf_token': csrf_token
             }, status=status.HTTP_200_OK)
+            response.set_cookie('csrftoken', csrf_token)
+            return response
         else:
             return Response({'error': _('Неверные учетные данные')}, status=status.HTTP_401_UNAUTHORIZED)

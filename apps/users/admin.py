@@ -23,11 +23,13 @@ def create_groups_and_permissions():
             ])
         elif role == 'Speaker':
             permissions = Permission.objects.filter(codename__in=[
-                'view_masterclass', 'add_favoritemasterclass', 'delete_favoritemasterclass', 'view_usermasterclass'
+                'view_masterclass', 'add_favoritemasterclass', 'delete_favoritemasterclass', 'view_usermasterclass',
+                'add_usermasterclass', 'delete_usermasterclass', 'view_usermasterclass'
             ])
         elif role == 'Participant':
             permissions = Permission.objects.filter(codename__in=[
-                'view_masterclass', 'add_favoritemasterclass', 'delete_favoritemasterclass', 'view_favoritemasterclass'
+                'view_masterclass', 'add_favoritemasterclass', 'delete_favoritemasterclass', 'view_favoritemasterclass',
+                'add_usermasterclass', 'delete_usermasterclass', 'view_usermasterclass'
             ])
 
         group.permissions.set(permissions)

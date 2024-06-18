@@ -18,8 +18,6 @@ from .serializer import MasterClassSerializer, CategorySerializer, UserMasterCla
     MasterClassUpdateSerializer
 from ..users.models import User
 
-logger = logging.getLogger(__name__)
-
 
 class MasterClassPagination(PageNumberPagination):
     page_size = 20
@@ -120,9 +118,11 @@ class MasterClassFilter(django_filters.FilterSet):
         fields = ['categories', 'locality', 'start_date', 'end_date']
 
 
-@method_decorator(cache_page(60 * 5), name='list')
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class MasterClassViewSet(viewsets.ModelViewSet):
-    queryset = MasterClass.objects.annotate(participant_count=Count('participants')).select_related('organizer', 'speaker').prefetch_related('categories')
+    queryset = MasterClass.objects.annotate(participant_count=Count('participants')).select_related('organizer',
+                                                                                                    'speaker').prefetch_related(
+        'categories')
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = MasterClassFilter
     search_fields = ['title']
@@ -131,7 +131,19 @@ class MasterClassViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
             return [AllowAny()]
-        return [IsAuthenticated(), DjangoModelPermissions()]
+        return [IsAuthenticated()]
+
+    @action(detail=True, methods=['get'], url_path='registrations', permission_classes=[IsAuthenticated])
+    def registrations(self, request, pk=None):
+        master_class = self.get_object()
+        if request.user != master_class.organizer:
+            return Response({'status': 'forbidden',
+                             'detail': 'You do not have permission to view registrations for this master class.'},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        registrations = UserMasterClass.objects.filter(master_class=master_class).select_related('user')
+        serializer = UserMasterClassSerializer(registrations, many=True)
+        return Response(serializer.data)
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -139,8 +151,6 @@ class MasterClassViewSet(viewsets.ModelViewSet):
         elif self.action in ['update', 'partial_update']:
             return MasterClassUpdateSerializer
         return MasterClassSerializer
-
-
 
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('masterclasses.add_masterclass'):
@@ -221,4 +231,3 @@ class MasterClassViewSet(viewsets.ModelViewSet):
         master_classes = MasterClass.objects.filter(locality=locality)
         serializer = self.get_serializer(master_classes, many=True)
         return Response(serializer.data)
-

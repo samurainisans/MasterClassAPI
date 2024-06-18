@@ -15,6 +15,7 @@ from django.conf import settings
 # Конфигурация статической ссылки Picsum
 PICSUM_URL = 'https://picsum.photos/400/300'
 
+
 def get_image_url():
     try:
         response = requests.get(PICSUM_URL)
@@ -24,20 +25,24 @@ def get_image_url():
         print(f'Request failed: {e}')
     return None
 
+
 def save_image_to_server(image_content, filename):
     path = os.path.join('masterclass_images', filename)
     saved_path = default_storage.save(path, ContentFile(image_content))
     return os.path.join(settings.MEDIA_URL, saved_path.lstrip('/'))
+
 
 def update_masterclass_with_image(masterclass):
     image_content = get_image_url()
     if image_content:
         filename = f'masterclass_{masterclass.id}.jpg'
         image_url = save_image_to_server(image_content, filename)
-        masterclass.image_url = image_url
+        # Обновление пути к изображению в базе данных
+        masterclass.image_url = f'{image_url}'
         masterclass.save()
         return masterclass.id, image_url
     return masterclass.id, None
+
 
 # Получение всех мастер-классов
 masterclasses = MasterClass.objects.all()

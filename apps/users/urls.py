@@ -2,7 +2,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import UserViewSet, PasswordResetView, PasswordResetConfirmView, UserRegistrationView, ActivateView, \
-    RoleViewSet, SpeakerViewSet, UserLoginView
+    RoleViewSet, SpeakerViewSet, UserLoginView, OrganizerMasterClassView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = DefaultRouter()
@@ -18,6 +18,9 @@ urlpatterns = [
     path('roles/', RoleViewSet.as_view({'get': 'list'}), name='roles-list'),
     path('speakers/', SpeakerViewSet.as_view({'get': 'list'}), name='speakers-list'),
     path('organizers/', UserViewSet.as_view({'get': 'list'}), name='organizers-list'),
-    path('<int:pk>/', UserViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update'}), name='user-detail'),
+    path('<int:pk>/', UserViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update'}),
+         name='user-detail'),
+    path('organizer/<int:organizer_id>/masterclasses/', OrganizerMasterClassView.as_view(),
+         name='organizer-masterclasses'),
     path('', include(router.urls)),
 ]
