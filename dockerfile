@@ -1,31 +1,46 @@
-# используем официальный образ python 3.11
-FROM python:3.11-slim
+# # use the official python image as a base image
+# FROM python:3.10
+#
+# # set environment variables
+# ENV PYTHONDONTWRITEBYTECODE 1
+# ENV PYTHONUNBUFFERED 1
+#
+# # set the working directory in the container
+# WORKDIR /app
+#
+# # copy the requirements file into the container
+# COPY requirements.txt /app/
+#
+# # install the python dependencies
+# RUN pip install --no-cache-dir -r requirements.txt
+#
+# # copy the project files into the container
+# COPY . /app/
+#
+# # run the django development server
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
-# устанавливаем зависимости для psycopg2 и других необходимых библиотек
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc libpq-dev python3-dev netcat-traditional && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# use a specific version of the official python image
+FROM python:3.10
 
-# устанавливаем рабочую директорию
+# set environment variables with comments
+ENV PYTHONDONTWRITEBYTECODE 1
+# prevents python from writing .pyc files
+
+ENV PYTHONUNBUFFERED 1
+# ensures output is sent straight to the terminal
+
+# set the working directory in the container
 WORKDIR /app
 
-# копируем и устанавливаем зависимости
+# copy the requirements file into the container
 COPY requirements.txt /app/
+
+# install the python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# копируем файлы проекта
+# copy the project files into the container
 COPY . /app/
 
-# сборка статических файлов
-RUN python manage.py collectstatic --noinput
-
-# настраиваем переменные окружения
-ENV PYTHONUNBUFFERED 1
-
-# копируем скрипт entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# команда запуска
-CMD ["/entrypoint.sh"]
+# run gunicorn server for production
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "MasterClassAPI.wsgi:application"]
