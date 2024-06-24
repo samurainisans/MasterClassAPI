@@ -1,13 +1,21 @@
-Данный проект представляет собой серверную часть для клиент-серверного приложения. 
-Стек технологий:
--Django
--Python 3.x
--JWT
--psycopg2 (PostgreSQL)
--djangorestframework
+### Описание проекта
 
-Есть модуль пользователя, мастер-класса и гис-системы
-Запросы можно посмотреть по ссылки в postman-коллекции https://www.postman.com/red-desert-383417/workspace/masterclasspublicapi/collection/20419119-fec03105-cd8f-4fff-99f1-1fac47f95a94?action=share&creator=20419119
+Данный проект представляет собой серверную часть для клиент-серверного приложения.
+
+### Стек технологий
+
+- **Django**
+- **Python 3.x**
+- **JWT (JSON Web Tokens)**
+- **psycopg2 (PostgreSQL)**
+- **djangorestframework**
+
+### API Endpoints
+
+Приложение включает модули для управления пользователями, мастер-классами и ГИС-системой.
+
+Подробное описание запросов доступно в Postman-коллекции по [этой ссылке](https://www.postman.com/red-desert-383417/workspace/masterclasspublicapi/collection/20419119-fec03105-cd8f-4fff-99f1-1fac47f95a94?action=share&creator=20419119).
+
 
 
 ![изображение](https://github.com/samurainisans/MasterClassAPI/assets/129648812/3b33ccb0-425d-4069-afec-9ae6349c2a0c)
