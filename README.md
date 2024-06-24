@@ -1,3 +1,18 @@
+Данный проект представляет собой серверную часть для клиент-серверного приложения. 
+Стек технологий:
+-Django
+-Python 3.x
+-JWT
+-psycopg2 (PostgreSQL)
+-djangorestframework
+
+Есть модуль пользователя, мастер-класса и гис-системы
+Запросы можно посмотреть по ссылки в postman-коллекции https://www.postman.com/red-desert-383417/workspace/masterclasspublicapi/collection/20419119-fec03105-cd8f-4fff-99f1-1fac47f95a94?action=share&creator=20419119
+
+
+![изображение](https://github.com/samurainisans/MasterClassAPI/assets/129648812/3b33ccb0-425d-4069-afec-9ae6349c2a0c)
+
+
 # Инструкция по развертыванию сервера
 
 Эта инструкция поможет вам развернуть сервер с использованием Docker Compose. Следуйте шагам ниже для настройки и запуска всех необходимых компонентов.
